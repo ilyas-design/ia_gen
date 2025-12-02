@@ -1,9 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import './Cart.css';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   if (cartItems.length === 0) {
     return (
@@ -96,8 +99,12 @@ const Cart = () => {
               }).format(getCartTotal())}
             </span>
           </div>
-          <button className="checkout-btn">
-            Proceed to Checkout
+          <button
+            className="checkout-btn"
+            onClick={() => navigate('/checkout')}
+            disabled={!isAuthenticated || cartItems.length === 0}
+          >
+            {isAuthenticated ? 'Proceed to Checkout' : 'Sign in to Checkout'}
           </button>
           <Link to="/" className="continue-shopping-link">
             Continue Shopping

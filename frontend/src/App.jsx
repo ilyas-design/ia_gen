@@ -1,6 +1,6 @@
 import './App.css';
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Badge,
@@ -22,6 +22,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Menu, MenuItem } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider, useCart } from './contexts/CartContext';
 import ProductList from './components/ProductList.jsx';
@@ -29,6 +32,9 @@ import SignIn from './components/SignIn.jsx';
 import SignUp from './components/SignUp.jsx';
 import Cart from './components/Cart.jsx';
 import Footer from './components/Footer.jsx';
+import Checkout from './components/Checkout.jsx';
+import OrderHistory from './components/OrderHistory.jsx';
+import Settings from './components/Settings.jsx';
 
 const SearchBar = ({ mobile = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,14 +83,24 @@ const SearchBar = ({ mobile = false }) => {
   );
 };
 
-const AppBarWithAuth = () => {
+const AppBarWithAuth = ({ onCategoryChange }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const { isAuthenticated, user, signOut } = useAuth();
   const { getCartItemCount } = useCart();
   const cartCount = getCartItemCount();
+  const navigate = useNavigate();
+
+  const handleAccountClick = (event) => {
+    setAccountMenuAnchor(event.currentTarget);
+  };
+
+  const handleCloseAccountMenu = () => {
+    setAccountMenuAnchor(null);
+  };
 
   return (
     <>
@@ -119,9 +135,9 @@ const AppBarWithAuth = () => {
           {!isMobile && <SearchBar />}
 
           {/* Right Side Actions */}
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
             gap: { xs: 0.5, sm: 1 },
             ml: 'auto',
             flexShrink: 0
@@ -133,6 +149,7 @@ const AppBarWithAuth = () => {
                     <Button
                       color="inherit"
                       startIcon={<PersonIcon />}
+                      onClick={handleAccountClick}
                       sx={{
                         textTransform: 'none',
                         display: { xs: 'none', sm: 'flex' },
@@ -143,10 +160,7 @@ const AppBarWithAuth = () => {
                     >
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', mr: 1 }}>
                         <Typography variant="caption" sx={{ lineHeight: 1, fontSize: '0.7rem' }}>
-                          Hello, {user?.name || 'User'}
-                        </Typography>
-                        <Typography variant="caption" sx={{ fontWeight: 600, lineHeight: 1, fontSize: '0.7rem' }}>
-                          Account
+                          Bonjour, {user?.name || 'Utilisateur'}
                         </Typography>
                       </Box>
                     </Button>
@@ -201,6 +215,26 @@ const AppBarWithAuth = () => {
               </Button>
             )}
 
+            {/* My Orders button (only when authenticated) */}
+            {isAuthenticated && (
+              <Button
+                color="inherit"
+                component={Link}
+                to="/orders"
+                startIcon={<ReceiptLongIcon />}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  display: { xs: 'none', sm: 'flex' },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
+                My Orders
+              </Button>
+            )}
+
             {/* Cart Icon */}
             <IconButton
               color="inherit"
@@ -242,6 +276,22 @@ const AppBarWithAuth = () => {
           </Box>
         )}
       </AppBar>
+
+      {/* Account Menu */}
+      <Menu
+        anchorEl={accountMenuAnchor}
+        open={Boolean(accountMenuAnchor)}
+        onClose={handleCloseAccountMenu}
+      >
+        <MenuItem
+          onClick={() => {
+            handleCloseAccountMenu();
+            navigate('/settings');
+          }}
+        >
+          <SettingsIcon fontSize="small" style={{ marginRight: 8 }} /> Settings
+        </MenuItem>
+      </Menu>
 
       {/* Mobile Menu Drawer */}
       <Drawer
@@ -294,6 +344,8 @@ const AppBarWithAuth = () => {
             minWidth: 'max-content'
           }}>
             <Button
+              component={Link}
+              to="/"
               color="inherit"
               sx={{
                 textTransform: 'none',
@@ -304,6 +356,7 @@ const AppBarWithAuth = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)'
                 }
               }}
+              onClick={() => onCategoryChange && onCategoryChange('All')}
             >
               All
             </Button>
@@ -318,6 +371,7 @@ const AppBarWithAuth = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)'
                 }
               }}
+              onClick={() => onCategoryChange && onCategoryChange('Electronics')}
             >
               Electronics
             </Button>
@@ -332,6 +386,7 @@ const AppBarWithAuth = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)'
                 }
               }}
+              onClick={() => onCategoryChange && onCategoryChange('Clothing')}
             >
               Clothing
             </Button>
@@ -346,6 +401,7 @@ const AppBarWithAuth = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)'
                 }
               }}
+              onClick={() => onCategoryChange && onCategoryChange('Home & Kitchen')}
             >
               Home & Kitchen
             </Button>
@@ -360,6 +416,7 @@ const AppBarWithAuth = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)'
                 }
               }}
+              onClick={() => onCategoryChange && onCategoryChange('Sports')}
             >
               Sports
             </Button>
@@ -370,21 +427,75 @@ const AppBarWithAuth = () => {
   );
 };
 
+const RequireAuth = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+
+  // Pendant qu'on recharge le token depuis localStorage, on ne redirige pas
+  if (loading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/signin" replace />;
+  }
+
+  return children;
+};
+
 const AppContent = () => {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const location = useLocation();
+
+  const hideLayout =
+    location.pathname === '/signin' ||
+    location.pathname === '/signup' ||
+    location.pathname === '/checkout';
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CssBaseline />
-      <AppBarWithAuth />
+      {!hideLayout && <AppBarWithAuth onCategoryChange={setSelectedCategory} />}
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Routes>
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/" element={<ProductList />} />
+          <Route
+            path="/cart"
+            element={
+              <RequireAuth>
+                <Cart />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <RequireAuth>
+                <Checkout />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <RequireAuth>
+                <OrderHistory />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <RequireAuth>
+                <Settings />
+              </RequireAuth>
+            }
+          />
+          <Route path="/" element={<ProductList selectedCategory={selectedCategory} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>
-      <Footer />
+      {!hideLayout && <Footer />}
     </Box>
   );
 };

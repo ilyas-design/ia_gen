@@ -57,71 +57,73 @@ const SignUp = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-paper">
-        <h1 className="auth-title">Sign Up</h1>
-        <p className="auth-subtitle">Create a new account to start shopping.</p>
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-paper">
+          <h1 className="auth-title">Sign Up</h1>
+          <p className="auth-subtitle">Create a new account to start shopping.</p>
 
-        {error && (
-          <div className="auth-error">{error}</div>
-        )}
+          {error && (
+            <div className="auth-error">{error}</div>
+          )}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            id="name"
-            label="Full Name (Optional)"
-            name="name"
-            autoComplete="name"
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <TextField
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            helperText="Password must be at least 6 characters"
-          />
-          <TextField
-            required
-            fullWidth
-            name="confirmPassword"
-            label="Confirm Password"
-            type="password"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="auth-submit-btn"
-            disabled={loading}
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
-          <div className="auth-link-container">
-            <Link to="/signin" className="auth-link">
-              Already have an account? Sign In
-            </Link>
-          </div>
-        </form>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              id="name"
+              label="Full Name (Optional)"
+              name="name"
+              autoComplete="name"
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <TextField
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              helperText="Password must be at least 6 characters"
+            />
+            <TextField
+              required
+              fullWidth
+              name="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading}
+            >
+              {loading ? 'Creating Account...' : 'Sign Up'}
+            </button>
+            <div className="auth-link-container">
+              <Link to="/signin" className="auth-link">
+                Already have an account? Sign In
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

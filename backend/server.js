@@ -42,6 +42,10 @@ const Product = sequelize.define(
         min: 0
       }
     },
+    category: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     imageUrl: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -119,6 +123,111 @@ const User = sequelize.define(
 Product.hasMany(CartItem, { foreignKey: 'productId' });
 CartItem.belongsTo(Product, { foreignKey: 'productId' });
 
+// Order models
+const Order = sequelize.define(
+  'Order',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    totalAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0
+      }
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'PAID' // since payment is simulated
+    },
+    paymentMethod: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    cardLast4: {
+      type: DataTypes.STRING,
+      allowNull: true
+    }
+  },
+  {
+    tableName: 'orders',
+    timestamps: true
+  }
+);
+
+const OrderItem = sequelize.define(
+  'OrderItem',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        min: 1
+      }
+    },
+    unitPrice: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0
+      }
+    }
+  },
+  {
+    tableName: 'order_items',
+    timestamps: true
+  }
+);
+
+User.hasMany(Order, { foreignKey: 'userId' });
+Order.belongsTo(User, { foreignKey: 'userId' });
+
+Order.belongsToMany(Product, { through: OrderItem, foreignKey: 'orderId' });
+Product.belongsToMany(Order, { through: OrderItem, foreignKey: 'productId' });
+
+// Comments model
+const Comment = sequelize.define(
+  'Comment',
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    rating: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        min: 1,
+        max: 5
+      }
+    }
+  },
+  {
+    tableName: 'comments',
+    timestamps: true
+  }
+);
+
+User.hasMany(Comment, { foreignKey: 'userId' });
+Comment.belongsTo(User, { foreignKey: 'userId' });
+
+Product.hasMany(Comment, { foreignKey: 'productId' });
+Comment.belongsTo(Product, { foreignKey: 'productId' });
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Middleware to verify JWT token
@@ -182,6 +291,80 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
+// Product comments
+app.get('/api/products/:id/comments', async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const comments = await Comment.findAll({
+      where: { productId },
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name', 'email']
+        }
+      ]
+    });
+
+    res.json(comments);
+  } catch (error) {
+    console.error('Failed to fetch comments', error);
+    res.status(500).json({ message: 'Failed to fetch comments' });
+  }
+});
+
+app.post('/api/products/:id/comments', authenticateToken, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { content, rating } = req.body;
+
+    const product = await Product.findByPk(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      return res.status(400).json({ message: 'Comment content is required' });
+    }
+
+    let parsedRating = rating;
+    if (parsedRating !== undefined && parsedRating !== null) {
+      parsedRating = Number(parsedRating);
+      if (Number.isNaN(parsedRating) || parsedRating < 1 || parsedRating > 5) {
+        return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      }
+    } else {
+      parsedRating = null;
+    }
+
+    const comment = await Comment.create({
+      content: content.trim(),
+      rating: parsedRating,
+      productId,
+      userId: req.user.userId
+    });
+
+    const createdComment = await Comment.findByPk(comment.id, {
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name', 'email']
+        }
+      ]
+    });
+
+    res.status(201).json(createdComment);
+  } catch (error) {
+    console.error('Failed to create comment', error);
+    res.status(500).json({ message: 'Failed to create comment' });
+  }
+});
+
 app.post('/api/products', async (req, res) => {
   try {
     const { name, description, price, stock } = req.body;
@@ -201,7 +384,7 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-app.post('/api/cart/add', async (req, res) => {
+app.post('/api/cart/add', authenticateToken, async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
     if (!productId || quantity <= 0) {
@@ -231,13 +414,152 @@ app.post('/api/cart/add', async (req, res) => {
   }
 });
 
-app.get('/api/cart', async (req, res) => {
+app.get('/api/cart', authenticateToken, async (req, res) => {
   try {
     const items = await CartItem.findAll({ include: Product });
     res.json(items);
   } catch (error) {
     console.error('Failed to fetch cart', error);
     res.status(500).json({ message: 'Failed to fetch cart' });
+  }
+});
+
+// Orders / Checkout routes
+app.post('/api/orders/checkout', authenticateToken, async (req, res) => {
+  try {
+    const { items, paymentMethod, cardNumber, cardHolder, expiry, cvv } = req.body;
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Cart is empty' });
+    }
+
+    if (!paymentMethod || !cardNumber || !cardHolder || !expiry || !cvv) {
+      return res.status(400).json({ message: 'Payment information is incomplete' });
+    }
+
+    // Basic fake validation for payment fields
+    const digitsOnlyCard = String(cardNumber).replace(/\D/g, '');
+    const digitsOnlyCvv = String(cvv).replace(/\D/g, '');
+    const expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+
+    if (digitsOnlyCard.length !== 16) {
+      return res.status(400).json({ message: 'Invalid card number. It must contain 16 digits.' });
+    }
+
+    if (digitsOnlyCvv.length !== 3) {
+      return res.status(400).json({ message: 'Invalid CVC. It must contain 3 digits.' });
+    }
+
+    if (!expiryPattern.test(expiry)) {
+      return res.status(400).json({ message: 'Invalid expiry date. Use format MM/YY.' });
+    }
+
+    // Simulate payment processing delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Validate products, stock and compute total
+    let totalAmount = 0;
+    const orderItemsPayload = [];
+    const stockUpdates = [];
+
+    for (const item of items) {
+      const product = await Product.findByPk(item.productId);
+      if (!product) {
+        return res.status(400).json({ message: `Product with id ${item.productId} not found` });
+      }
+
+      const quantity = item.quantity || 1;
+
+      if (product.stock < quantity) {
+        return res.status(400).json({
+          message: `Not enough stock for product "${product.name}". Requested ${quantity}, available ${product.stock}.`
+        });
+      }
+      const unitPrice = product.price;
+      totalAmount += unitPrice * quantity;
+
+      orderItemsPayload.push({
+        productId: product.id,
+        quantity,
+        unitPrice
+      });
+
+      stockUpdates.push({ product, quantity });
+    }
+
+    const cardLast4 = cardNumber.slice(-4);
+
+    // Use a transaction so order, items and stock updates are consistent
+    const result = await sequelize.transaction(async (t) => {
+      // Create order first
+      const order = await Order.create(
+        {
+          userId: req.user.userId,
+          totalAmount,
+          status: 'PAID',
+          paymentMethod,
+          cardLast4
+        },
+        { transaction: t }
+      );
+
+      // Then create order items linked to this order
+      const orderItemsWithOrderId = orderItemsPayload.map((item) => ({
+        ...item,
+        orderId: order.id
+      }));
+
+      await OrderItem.bulkCreate(orderItemsWithOrderId, { transaction: t });
+
+      // Decrement stock for each product
+      for (const { product, quantity } of stockUpdates) {
+        await product.decrement('stock', { by: quantity, transaction: t });
+      }
+
+      const createdOrder = await Order.findByPk(order.id, {
+        transaction: t,
+        include: [
+          {
+            model: Product,
+            through: {
+              attributes: ['quantity', 'unitPrice']
+            }
+          }
+        ]
+      });
+
+      return createdOrder;
+    });
+
+    res.status(201).json({
+      message: 'Order created successfully (payment simulated)',
+      order: result
+    });
+  } catch (error) {
+    console.error('Failed to create order', error);
+    res.status(500).json({ message: 'Failed to create order' });
+  }
+});
+
+app.get('/api/orders/my', authenticateToken, async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      where: { userId: req.user.userId },
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: Product,
+          through: {
+            attributes: ['quantity', 'unitPrice']
+          }
+        }
+      ]
+    });
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Failed to fetch orders', error);
+    res.status(500).json({ message: 'Failed to fetch orders' });
   }
 });
 
@@ -346,6 +668,49 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
   }
 });
 
+// Update current user profile
+app.put('/api/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const existingUser = await User.findOne({
+      where: { email },
+      attributes: ['id']
+    });
+
+    if (existingUser && existingUser.id !== req.user.userId) {
+      return res.status(400).json({ message: 'Email is already in use by another account' });
+    }
+
+    const user = await User.findByPk(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.name = name || null;
+    user.email = email;
+    await user.save();
+
+    const safeUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name
+    };
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: safeUser
+    });
+  } catch (error) {
+    console.error('Failed to update user', error);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
 async function initializeDatabase() {
   await sequelize.sync();
 
@@ -356,37 +721,106 @@ async function initializeDatabase() {
         name: 'Starter Tee',
         description: 'Soft cotton t-shirt for everyday wear.',
         price: 19.99,
-        stock: 50
+        stock: 50,
+        category: 'Clothing'
       },
       {
         name: 'Commuter Backpack',
         description: 'Durable backpack with padded laptop sleeve.',
         price: 79.99,
-        stock: 20
+        stock: 20,
+        category: 'Accessories'
       },
       {
         name: 'Classic Sneakers',
         description: 'Comfortable and stylish sneakers for all occasions.',
         price: 89.99,
-        stock: 30
+        stock: 30,
+        category: 'Clothing'
       },
       {
         name: 'Wireless Headphones',
         description: 'Premium sound quality with noise cancellation.',
         price: 149.99,
-        stock: 15
+        stock: 15,
+        category: 'Electronics'
       },
       {
         name: 'Smart Watch',
         description: 'Track your fitness and stay connected on the go.',
         price: 199.99,
-        stock: 25
+        stock: 25,
+        category: 'Electronics'
       },
       {
         name: 'Leather Wallet',
         description: 'Sleek and durable leather wallet with RFID protection.',
         price: 49.99,
-        stock: 40
+        stock: 40,
+        category: 'Accessories'
+      },
+      {
+        name: 'Gaming Mouse',
+        description: 'High precision wireless gaming mouse with RGB lighting.',
+        price: 59.99,
+        stock: 35,
+        category: 'Electronics'
+      },
+      {
+        name: 'Office Chair',
+        description: 'Ergonomic chair with lumbar support for long work sessions.',
+        price: 229.99,
+        stock: 12,
+        category: 'Home & Kitchen'
+      },
+      {
+        name: 'Stainless Steel Water Bottle',
+        description: 'Insulated bottle keeps drinks cold for 24h, hot for 12h.',
+        price: 24.99,
+        stock: 80,
+        category: 'Sports'
+      },
+      {
+        name: 'Yoga Mat',
+        description: 'Non-slip yoga mat with extra cushioning for comfort.',
+        price: 39.99,
+        stock: 60,
+        category: 'Sports'
+      },
+      {
+        name: 'Noise-Cancelling Earbuds',
+        description: 'Compact earbuds with active noise cancellation and mic.',
+        price: 129.99,
+        stock: 40,
+        category: 'Electronics'
+      },
+      {
+        name: 'Denim Jacket',
+        description: 'Classic denim jacket with modern slim fit.',
+        price: 69.99,
+        stock: 22,
+        category: 'Clothing'
+      },
+      {
+        name: 'Ceramic Coffee Mug Set',
+        description: 'Set of 4 large ceramic mugs, dishwasher safe.',
+        price: 34.99,
+        stock: 55,
+        category: 'Home & Kitchen'
+      },
+      {
+        name: 'Bluetooth Speaker',
+        description: 'Portable Bluetooth speaker with deep bass and 12h battery.',
+        price: 89.99,
+        stock: 28,
+        category: 'Electronics'
+      },
+      {
+        name: 'Running Shorts',
+        description: 'Lightweight running shorts with breathable fabric.',
+        price: 29.99,
+        stock: 70,
+        category: 'Clothing'
       }
     ];
 
