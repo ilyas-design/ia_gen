@@ -1,0 +1,183 @@
+{
+  "products": [
+    {
+      "id": "03ae0bd0-8b09-4436-8ed2-308f3716e588",
+      "name": "Starter Tee",
+      "description": "Soft cotton t-shirt for everyday wear.",
+      "price": 19.99,
+      "stock": 50,
+      "category": "Clothing",
+      "imageUrl": "https://picsum.photos/400/300?random=400",
+      "createdAt": "2025-12-02T23:10:17.310Z",
+      "updatedAt": "2025-12-02T23:10:17.310Z"
+    },
+    {
+      "id": "6f483d63-22d0-426d-96ca-46e8ec3827aa",
+      "name": "Commuter Backpack",
+      "description": "Durable backpack with padded laptop sleeve.",
+      "price": 79.99,
+      "stock": 20,
+      "category": "Accessories",
+      "imageUrl": "https://picsum.photos/400/300?random=30",
+      "createdAt": "2025-12-02T23:10:17.311Z",
+      "updatedAt": "2025-12-02T23:10:17.311Z"
+    },
+    {
+      "id": "a2716da4-4da2-4819-bdd4-45d66c26af17",
+      "name": "Classic Sneakers",
+      "description": "Comfortable and stylish sneakers for all occasions.",
+      "price": 89.99,
+      "stock": 30,
+      "category": "Clothing",
+      "imageUrl": "https://picsum.photos/400/300?random=868",
+      "createdAt": "2025-12-02T23:10:17.311Z",
+      "updatedAt": "2025-12-02T23:10:17.311Z"
+    },
+    {
+      "id": "57f86897-2dd8-48c3-bc51-01513f42493a",
+      "name": "Wireless Headphones",
+      "description": "Premium sound quality with noise cancellation.",
+      "price": 149.99,
+      "stock": 15,
+      "category": "Electronics",
+      "imageUrl": "https://picsum.photos/400/300?random=295",
+      "createdAt": "2025-12-02T23:10:17.311Z",
+      "updatedAt": "2025-12-02T23:10:17.311Z"
+    },
+    {
+      "id": "fc7403a6-2177-4050-98aa-352c7cb26d9c",
+      "name": "Smart Watch",
+      "description": "Track your fitness and stay connected on the go.",
+      "price": 199.99,
+      "stock": 25,
+      "category": "Electronics",
+      "imageUrl": "https://picsum.photos/400/300?random=249",
+      "createdAt": "2025-12-02T23:10:17.312Z",
+      "updatedAt": "2025-12-02T23:10:17.312Z"
+    },
+    {
+      "id": "1eb3e385-fa4f-471f-a2dd-93555177d976",
+      "name": "Leather Wallet",
+      "description": "Sleek and durable leather wallet with RFID protection.",
+      "price": 49.99,
+      "stock": 40,
+      "category": "Accessories",
+      "imageUrl": "https://picsum.photos/400/300?random=103",
+      "createdAt": "2025-12-02T23:10:17.312Z",
+      "updatedAt": "2025-12-02T23:10:17.312Z"
+    },
+    {
+      "id": "1a458d0a-24f2-40fc-bad3-3f36cf78cb8e",
+      "name": "Gaming Mouse",
+      "description": "High precision wireless gaming mouse with RGB lighting.",
+      "price": 59.99,
+      "stock": 35,
+      "category": "Electronics",
+      "imageUrl": "https://picsum.photos/400/300?random=352",
+      "createdAt": "2025-12-02T23:10:17.312Z",
+      "updatedAt": "2025-12-02T23:10:17.312Z"
+    },
+    {
+      "id": "85f6204d-2827-4385-a8b7-b550d4f6d66b",
+      "name": "Office Chair",
+      "description": "Ergonomic chair with lumbar support for long work sessions.",
+      "price": 229.99,
+      "stock": 12,
+      "category": "Home & Kitchen",
+      "imageUrl": "https://picsum.photos/400/300?random=895",
+      "createdAt": "2025-12-02T23:10:17.312Z",
+      "updatedAt": "2025-12-02T23:10:17.312Z"
+    },
+    {
+      "id": "1fe4aaf0-563c-4e65-9702-121d33a55819",
+      "name": "Stainless Steel Water Bottle",
+      "description": "Insulated bottle keeps drinks cold for 24h, hot for 12h.",
+      "price": 24.99,
+      "stock": 80,
+      "category": "Sports",
+      "imageUrl": "https://picsum.photos/400/300?random=808",
+      "createdAt": "2025-12-02T23:10:17.312Z",
+      "updatedAt": "2025-12-02T23:10:17.312Z"
+    },
+    {
+      "id": "fccc03f1-1e84-4a77-b8bf-6b08a1729c52",
+      "name": "Yoga Mat",
+      "description": "Non-slip yoga mat with extra cushioning for comfort.",
+      "price": 39.99,
+      "stock": 60,
+      "category": "Sports",
+      "imageUrl": "https://picsum.photos/400/300?random=31",
+      "createdAt": "2025-12-02T23:10:17.313Z",
+      "updatedAt": "2025-12-02T23:10:17.313Z"
+    },
+    {
+      "id": "dcb40305-95aa-4372-b7de-0bd2552dad26",
+      "name": "Noise-Cancelling Earbuds",
+      "description": "Compact earbuds with active noise cancellation and mic.",
+      "price": 129.99,
+      "stock": 40,
+      "category": "Electronics",
+      "imageUrl": "https://picsum.photos/400/300?random=791",
+      "createdAt": "2025-12-02T23:10:17.313Z",
+      "updatedAt": "2025-12-02T23:10:17.313Z"
+    },
+    {
+      "id": "1e76f06d-fe7a-465e-91ee-814e5b9070c6",
+      "name": "Denim Jacket",
+      "description": "Classic denim jacket with modern slim fit.",
+      "price": 69.99,
+      "stock": 22,
+      "category": "Clothing",
+      "imageUrl": "https://picsum.photos/400/300?random=796",
+      "createdAt": "2025-12-02T23:10:17.313Z",
+      "updatedAt": "2025-12-02T23:10:17.313Z"
+    },
+    {
+      "id": "b1ecd8a8-ad8c-4d11-811e-a01184e71a8f",
+      "name": "Ceramic Coffee Mug Set",
+      "description": "Set of 4 large ceramic mugs, dishwasher safe.",
+      "price": 34.99,
+      "stock": 55,
+      "category": "Home & Kitchen",
+      "imageUrl": "https://picsum.photos/400/300?random=11",
+      "createdAt": "2025-12-02T23:10:17.313Z",
+      "updatedAt": "2025-12-02T23:10:17.313Z"
+    },
+    {
+      "id": "ca978045-2a3c-4095-90ed-5b5f9d832636",
+      "name": "Bluetooth Speaker",
+      "description": "Portable Bluetooth speaker with deep bass and 12h battery.",
+      "price": 89.99,
+      "stock": 28,
+      "category": "Electronics",
+      "imageUrl": "https://picsum.photos/400/300?random=604",
+      "createdAt": "2025-12-02T23:10:17.313Z",
+      "updatedAt": "2025-12-02T23:10:17.313Z"
+    },
+    {
+      "id": "a942ce0b-77af-4d5b-88fc-4ad776935307",
+      "name": "Running Shorts",
+      "description": "Lightweight running shorts with breathable fabric.",
+      "price": 29.99,
+      "stock": 70,
+      "category": "Clothing",
+      "imageUrl": "https://picsum.photos/400/300?random=240",
+      "createdAt": "2025-12-02T23:10:17.313Z",
+      "updatedAt": "2025-12-02T23:10:17.313Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "a3fac7f7-f107-4c4b-af66-f3064b8d04e5",
+      "email": "ilyaslachgar7@gmail.com",
+      "password": "$2a$10$4kXmbQ1iY/OPsxH6/XEdKenuZUqUQZhVVceqk0sx6UhPjXSshkm9a",
+      "name": "Ilyas Lachgar",
+      "createdAt": "2025-12-03T13:06:33.619Z",
+      "updatedAt": "2025-12-03T13:06:33.619Z"
+    }
+  ],
+  "cartItems": [],
+  "orders": [],
+  "orderItems": [],
+  "comments": []
+}

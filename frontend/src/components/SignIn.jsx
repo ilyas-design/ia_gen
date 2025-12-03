@@ -44,51 +44,53 @@ const SignIn = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-paper">
-        <h1 className="auth-title">Sign In</h1>
-        <p className="auth-subtitle">Welcome back! Please sign in to your account.</p>
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-paper">
+          <h1 className="auth-title">Sign In</h1>
+          <p className="auth-subtitle">Welcome back! Please sign in to your account.</p>
 
-        {error && (
-          <div className="auth-error">{error}</div>
-        )}
+          {error && (
+            <div className="auth-error">{error}</div>
+          )}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <TextField
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <TextField
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            type="submit"
-            className="auth-submit-btn"
-            disabled={loading}
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
-          <div className="auth-link-container">
-            <Link to="/signup" className="auth-link">
-              Don't have an account? Sign Up
-            </Link>
-          </div>
-        </form>
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <TextField
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading}
+            >
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+            <div className="auth-link-container">
+              <Link to="/signup" className="auth-link">
+                Don't have an account? Sign Up
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
