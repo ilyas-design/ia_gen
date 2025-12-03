@@ -1,53 +1,57 @@
 const request = require('supertest');
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Sequelize, DataTypes } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
-// Mock database setup for testing
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: ':memory:',
-  logging: false
-});
-
+// Test database path
+const TEST_DB_PATH = path.join(__dirname, 'test-auth-database.json');
 const JWT_SECRET = 'test-secret-key';
 
-// Define User model for tests
-const User = sequelize.define(
-  'User',
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true
-      }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: true
-    }
-  },
-  {
-    tableName: 'users',
-    timestamps: true
+// Simple test database class
+class TestDatabase {
+  constructor(filePath) {
+    this.filePath = filePath;
+    this.data = { products: [], users: [], cartItems: [], orders: [], orderItems: [], comments: [] };
   }
-);
+
+  save() {
+    fs.writeFileSync(this.filePath, JSON.stringify(this.data, null, 2), 'utf8');
+  }
+
+  getUserByEmail(email) {
+    return this.data.users.find(u => u.email === email);
+  }
+
+  getUserById(id) {
+    return this.data.users.find(u => u.id === id);
+  }
+
+  createUser(user) {
+    const newUser = {
+      id: uuidv4(),
+      ...user,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.data.users.push(newUser);
+    this.save();
+    return newUser;
+  }
+
+  clear() {
+    this.data = { products: [], users: [], cartItems: [], orders: [], orderItems: [], comments: [] };
+    this.save();
+  }
+}
 
 // Create test app
 const app = express();
 app.use(express.json());
+
+const db = new TestDatabase(TEST_DB_PATH);
 
 // Define routes for testing
 app.post('/api/auth/signup', async (req, res) => {
@@ -58,14 +62,14 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = db.getUserByEmail(email);
     if (existingUser) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    const user = db.createUser({
       email,
       password: hashedPassword,
       name: name || null
@@ -99,7 +103,7 @@ app.post('/api/auth/signin', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const user = db.getUserByEmail(email);
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -131,16 +135,19 @@ app.post('/api/auth/signin', async (req, res) => {
 
 // Test suite
 describe('Authentication API Tests', () => {
-  beforeAll(async () => {
-    await sequelize.sync({ force: true });
+  beforeAll(() => {
+    db.clear();
   });
 
-  afterAll(async () => {
-    await sequelize.close();
+  afterAll(() => {
+    // Clean up test database file
+    if (fs.existsSync(TEST_DB_PATH)) {
+      fs.unlinkSync(TEST_DB_PATH);
+    }
   });
 
-  beforeEach(async () => {
-    await User.destroy({ where: {}, truncate: true });
+  beforeEach(() => {
+    db.clear();
   });
 
   describe('POST /api/auth/signup', () => {
@@ -173,7 +180,7 @@ describe('Authentication API Tests', () => {
         .post('/api/auth/signup')
         .send(newUser);
       
-      const user = await User.findOne({ where: { email: 'test@example.com' } });
+      const user = db.getUserByEmail('test@example.com');
       expect(user.password).not.toBe('password123');
       expect(user.password.length).toBeGreaterThan(20);
     });
@@ -225,7 +232,7 @@ describe('Authentication API Tests', () => {
     beforeEach(async () => {
       // Create a test user
       const hashedPassword = await bcrypt.hash('password123', 10);
-      await User.create({
+      db.createUser({
         email: 'test@example.com',
         password: hashedPassword,
         name: 'Test User'
@@ -307,4 +314,3 @@ describe('Authentication API Tests', () => {
     });
   });
 });
-

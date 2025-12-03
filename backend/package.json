@@ -1,7 +1,7 @@
 {
   "name": "ecommerce-backend",
   "version": "1.0.0",
-  "description": "Express + Sequelize backend for the e-commerce demo app",
+  "description": "Express backend for the e-commerce demo app",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -10,19 +10,19 @@
   },
   "keywords": [
     "express",
-    "sequelize",
-    "sqlite",
     "ecommerce"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.22.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "sequelize": "^6.37.7",
-    "sqlite3": "npm:@journeyapps/sqlcipher@^5.3.1"
+    "uuid": "^11.1.0",
+    "validator": "^13.13.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

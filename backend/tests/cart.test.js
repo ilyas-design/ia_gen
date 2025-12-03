@@ -1,76 +1,85 @@
 const request = require('supertest');
 const express = require('express');
-const { Sequelize, DataTypes } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
-// Mock database setup for testing
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: ':memory:',
-  logging: false
-});
+// Test database path
+const TEST_DB_PATH = path.join(__dirname, 'test-cart-database.json');
 
-// Define models for tests
-const Product = sequelize.define(
-  'Product',
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
-    price: {
-      type: DataTypes.FLOAT,
-      allowNull: false
-    },
-    stock: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    }
-  },
-  {
-    tableName: 'products',
-    timestamps: true
+// Simple test database class
+class TestDatabase {
+  constructor(filePath) {
+    this.filePath = filePath;
+    this.data = { products: [], users: [], cartItems: [], orders: [], orderItems: [], comments: [] };
   }
-);
 
-const CartItem = sequelize.define(
-  'CartItem',
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true
-    },
-    productId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    quantity: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 1
-    }
-  },
-  {
-    tableName: 'cart_items',
-    timestamps: true
+  save() {
+    fs.writeFileSync(this.filePath, JSON.stringify(this.data, null, 2), 'utf8');
   }
-);
 
-Product.hasMany(CartItem, { foreignKey: 'productId' });
-CartItem.belongsTo(Product, { foreignKey: 'productId' });
+  getAllProducts() {
+    return this.data.products;
+  }
+
+  getProductById(id) {
+    return this.data.products.find(p => p.id === id);
+  }
+
+  createProduct(product) {
+    const newProduct = {
+      id: uuidv4(),
+      ...product,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.data.products.push(newProduct);
+    this.save();
+    return newProduct;
+  }
+
+  getCartItems() {
+    return this.data.cartItems.map(item => ({
+      ...item,
+      Product: this.getProductById(item.productId)
+    }));
+  }
+
+  getCartItemByProductId(productId) {
+    return this.data.cartItems.find(c => c.productId === productId);
+  }
+
+  addCartItem(item) {
+    const existing = this.getCartItemByProductId(item.productId);
+    if (existing) {
+      existing.quantity += item.quantity || 1;
+      existing.updatedAt = new Date().toISOString();
+      this.save();
+      return { ...existing, Product: this.getProductById(existing.productId) };
+    }
+    const newItem = {
+      id: uuidv4(),
+      productId: item.productId,
+      quantity: item.quantity || 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.data.cartItems.push(newItem);
+    this.save();
+    return { ...newItem, Product: this.getProductById(newItem.productId) };
+  }
+
+  clear() {
+    this.data = { products: [], users: [], cartItems: [], orders: [], orderItems: [], comments: [] };
+    this.save();
+  }
+}
 
 // Create test app
 const app = express();
 app.use(express.json());
+
+const db = new TestDatabase(TEST_DB_PATH);
 
 // Define routes for testing
 app.post('/api/cart/add', async (req, res) => {
@@ -80,22 +89,12 @@ app.post('/api/cart/add', async (req, res) => {
       return res.status(400).json({ message: 'Invalid cart payload' });
     }
 
-    const product = await Product.findByPk(productId);
+    const product = db.getProductById(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    const [cartItem, created] = await CartItem.findOrCreate({
-      where: { productId },
-      defaults: { quantity }
-    });
-
-    if (!created) {
-      cartItem.quantity += quantity;
-      await cartItem.save();
-    }
-
-    await cartItem.reload({ include: Product });
+    const cartItem = db.addCartItem({ productId, quantity });
     res.status(201).json(cartItem);
   } catch (error) {
     res.status(500).json({ message: 'Failed to add item to cart' });
@@ -104,7 +103,7 @@ app.post('/api/cart/add', async (req, res) => {
 
 app.get('/api/cart', async (req, res) => {
   try {
-    const items = await CartItem.findAll({ include: Product });
+    const items = db.getCartItems();
     res.json(items);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch cart' });
@@ -115,20 +114,21 @@ app.get('/api/cart', async (req, res) => {
 describe('Cart API Tests', () => {
   let testProduct;
 
-  beforeAll(async () => {
-    await sequelize.sync({ force: true });
+  beforeAll(() => {
+    db.clear();
   });
 
-  afterAll(async () => {
-    await sequelize.close();
+  afterAll(() => {
+    // Clean up test database file
+    if (fs.existsSync(TEST_DB_PATH)) {
+      fs.unlinkSync(TEST_DB_PATH);
+    }
   });
 
-  beforeEach(async () => {
-    await CartItem.destroy({ where: {}, truncate: true });
-    await Product.destroy({ where: {}, truncate: true });
-    
+  beforeEach(() => {
+    db.clear();
     // Create a test product
-    testProduct = await Product.create({
+    testProduct = db.createProduct({
       name: 'Test Product',
       description: 'Test Description',
       price: 29.99,
@@ -198,7 +198,7 @@ describe('Cart API Tests', () => {
       const response = await request(app)
         .post('/api/cart/add')
         .send({
-          productId: 9999,
+          productId: 'non-existent-id',
           quantity: 1
         });
       
@@ -235,4 +235,3 @@ describe('Cart API Tests', () => {
     });
   });
 });
-
